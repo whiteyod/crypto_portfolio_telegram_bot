@@ -6,9 +6,9 @@ This bot is designed to provide users with an easy and efficient way to manage a
 
 ## Features
 
-- Real-Time Cryptocurrency Prices: Fetches up-to-date prices and market data for a wide range of cryptocurrencies using the CoinMarketCap API
-- Portfolio Management: Allows users to add, remove, and track various cryptocurrencies in their portfolio
-- User-Friendly Interface: Simple and intuitive interface that integrates seamlessly with Telegram
+- **Real-Time Cryptocurrency Prices**: Fetches up-to-date prices and market data for a wide range of cryptocurrencies using the CoinMarketCap API
+- **Portfolio Management**: Allows users to add, remove, and track various cryptocurrencies in their portfolio
+- **User-Friendly Interface**: Simple and intuitive interface that integrates seamlessly with Telegram
 
 ## Used Technologies
 
