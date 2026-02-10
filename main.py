@@ -2,6 +2,8 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage 
 
 from config_reader import config
@@ -18,9 +20,19 @@ storage = MemoryStorage()
 
 # Enable polling
 async def main():
-    bot = Bot(token=config.bot_token.get_secret_value(), parse_mode='HTML')
+    bot = Bot(
+        token=config.bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     dp = Dispatcher(storage=storage)
-    dp.include_routers(commands.router, another_buttons.router, sell_buttons.router, tests.router, buy_buttons.router, show_button.router)
+    dp.include_routers(
+        commands.router,
+        another_buttons.router,
+        sell_buttons.router,
+        tests.router,
+        buy_buttons.router,
+        show_button.router
+    )
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

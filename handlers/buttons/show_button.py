@@ -33,12 +33,20 @@ async def starting(callback: types.CallbackQuery):
             
             # Get amount and price values from db by pair name
             price, token_amount = await get_ticker_data(i, user_id)
-            # Adding portfolio info
+            # Calculate P&L
+            buying_value = token_amount * price
+            current_value = token_amount * market_price
+            current_pnl = current_value - buying_value
+            # Format numbers
             price = '{:.9f}'.format(price)
+            formatted_current_value = '{:.2f}'.format(current_value)
+            current_pnl = float('{:.2f}'.format(current_pnl))
+            # Adding portfolio info
             portfolio_info.append(
-                f'<b>{i.upper()} {round(token_amount, 2)} ({token_amount*market_price} USD)</b>'
+                f'<b>{i.upper()} {round(token_amount, 2)} ({formatted_current_value} USD)</b>'
                 f'\nMean buying price: <b>{price}$</b>'
-                f'\n{chr(8212) * 3}'
+                f'\n P&L: {"+" if current_pnl > 0 else ""}{current_pnl}'
+                f'\n{chr(8212) * 13}'
             )
     c.execute(
         '''
