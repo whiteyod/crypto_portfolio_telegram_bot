@@ -45,7 +45,7 @@ async def starting(callback: types.CallbackQuery):
             portfolio_info.append(
                 f'<b>{i.upper()} {round(token_amount, 2)} ({formatted_current_value} USD)</b>'
                 f'\nMean buying price: <b>{price}$</b>'
-                f'\n P&L: {"+" if current_pnl > 0 else ""}{current_pnl}'
+                f'\n P&L: {"+" if current_pnl > 0 else ""}{current_pnl}$'
                 f'\n{chr(8212) * 13}'
             )
     c.execute(
