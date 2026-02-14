@@ -32,7 +32,7 @@ session.headers.update(headers)
 
 # Get current market price
 def get_ticker_price(ticker: str):
-    ''' Get current market price for pair from yfinance '''
+    ''' Get current market price for pair from CMC'''
     try:
         # Send request to API
         url = f'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={ticker.upper()}'
