@@ -5,7 +5,7 @@ from aiogram.filters.state import State, StatesGroup
 
 import asyncio
 
-from assets.db import c, get_ticker_data, conn, create_tickers_table
+from assets.db import c, get_ticker_data, conn, create_symbols_table
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
 from handlers.commands import get_ticker_price, get_ticker_data_from_cmc
 
@@ -30,7 +30,7 @@ async def saving(callback: types.CallbackQuery, state:FSMContext):
     await state.clear()
     user_id = callback.message.from_user.id
     # Create table if not exists
-    await create_tickers_table(user_id)
+    await create_symbols_table(user_id)
     # Set states to wait for user respond
     await state.set_state(SaveHandler.pair_state)
     await callback.message.answer(

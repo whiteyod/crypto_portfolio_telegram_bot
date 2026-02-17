@@ -76,6 +76,8 @@ async def starting(callback: types.CallbackQuery):
             # Update totals
             total_current_value += current_value
             total_cost_value += buying_value
+            allocation = (current_value / total_current_value * 100.0) \
+                if total_current_value else 0.0
 
             # Format values
             formatted_current_value = '{:.2f}'.format(current_value)
@@ -85,7 +87,8 @@ async def starting(callback: types.CallbackQuery):
             portfolio_info.append(
                 f'<b>{symbol} {round(token_amount, 2)} ({formatted_current_value} USD)</b>'
                 f'\nMean buying price: <b>{formatted_buy_price}$</b>'
-                f'\n P&L: {"+" if formatted_pnl > 0 else ""}{formatted_pnl}$'
+                f'\nP&L: {"+" if formatted_pnl > 0 else ""}{formatted_pnl}$'
+                f'\nAllocation: {allocation}%'
                 f'\n{chr(8212) * 13}'
             )
 

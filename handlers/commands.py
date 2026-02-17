@@ -6,7 +6,7 @@ from requests import Session
 import json
 import sys
 
-from assets.db import create_tickers_table
+from assets.db import create_symbols_table
 from config_reader import config
 from keyboards import main_kb
 
@@ -63,7 +63,7 @@ async def get_ticker_data_from_cmc(ticker: str):
 @router.message(Command('start'))
 async def cmd_start(message: Message):
     user_id = message.from_user.id
-    await create_tickers_table(user_id)
+    await create_symbols_table(user_id)
     await message.answer(
         f'<b>Bot is ready!</b>'
         f'\n<b>• Press "Show"</b> to view your current portfolio.'
