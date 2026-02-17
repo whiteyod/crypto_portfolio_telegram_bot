@@ -1,3 +1,4 @@
+from keyword import iskeyword
 from aiogram import Router, F, types
 from aiogram.types import Message, FSInputFile
 from aiogram.fsm.context import FSMContext
