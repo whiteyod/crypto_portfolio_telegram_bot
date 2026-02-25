@@ -4,25 +4,9 @@ from loguru import logger as log
 
 
 # Connecting  to database
-conn = sqlite3.connect('messages.db')
+conn = sqlite3.connect('assets.db')
 c = conn.cursor()
 
-
-# Create the table for symbols list
-async def create_symbols_table(user_id):
-    c.execute('''
-              CREATE TABLE IF NOT EXISTS messages
-              ([id] INTEGER PRIMARY KEY AUTOINCREMENT,
-              [user_id] INTEGER,
-              [pair] TEXT,
-              [price] FLOAT,
-              [token_amount] FLOAT
-              )
-              ''')
-    result = conn.commit()
-    if result:
-        print(f'Table was created for user {user_id}')
-        
 
 # Selecting values from the table
 async def get_ticker_data(pair: str, user_id: int):
@@ -39,6 +23,11 @@ async def get_ticker_data(pair: str, user_id: int):
     )
     result = c.fetchone()
     return result
+
+
+
+
+# ----------------------------- Table creation ----------------------------
 
 
 # Create table for perfoming actions with the symbol values
@@ -108,7 +97,8 @@ async def create_positions_table():
 
 
 
-# -------------------- Helper Functions -------------------------
+# ------------------------- Helper Functions -------------------------
+
 
 # One-time function for DB migration
 async def migrate_messafes_to_positions():
@@ -133,6 +123,77 @@ async def migrate_messafes_to_positions():
             ON CONFLICT (user_id, symbol) DO UPDATE SET
                 quantity=excluded.quantity,
                 avg_cost=excluded.avg_cost,
-                updated_at=datetime("now")
+                updated_at=CURRENT_TIMESTAMP
             ''', (user_id, symbol, float(qty), float(avg_cost))
         )
+
+
+# Get one position from the DB
+async def get_position(user_id: int, symbol: str):
+    c.execute(
+        ''' 
+        SELECT quantity, avg_cost, realized_pnl
+        FROM positions
+        WHERE user_id = ? AND symbol = ?
+        ''', (user_id, symbol.upper().strip()))
+    return c.fetchone()
+
+
+# Add new buy transaction and save symbol values to the positions
+async def apply_buy(
+    user_id: int, symbol: str, qty: float, price: float, fee_usd: float = 0.0
+    ):
+    # Convert symbol name 
+    symbol = symbol.upper().strip()
+    # Validate symbol values
+    if qty <= 0 or price <= 0:
+        raise ValueError('qty and price must be > 0')
+
+    # Get previos position data if exists, else map new values to be saved
+    pos = await get_position(user_id, symbol)
+    if pos is None:
+        old_qty, old_avg, old_realized = 0, 0, 0
+    else: 
+        old_qty, old_avg, old_realized = map(float, pos)
+    
+    # Calculate new position values
+    new_qty = old_qty + qty
+    total_cost = (old_qty * old_avg) + (qty * price) + fee_usd
+    new_avg = total_cost / new_qty
+
+    # Insert new transaction data
+    c.execute(
+        '''
+        INSERT INTO positions (user_id, symbol, side, quantity, price, fee_usd)
+        VALUES (?, ?, 'BUY', ?, ?, ?)
+        ''', (user_id, symbol, qty, price, fee_usd))
+    
+    # Insert new position's data
+    c.execute(
+        '''
+        INSERT INTO positions (user_id, symbol, quantity, avg_cost, realized_pnl)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, symbol) DO UPDATE SET
+            quantity=excluded.quantity,
+            avg_cost=excluded.avg_cost,
+            realized_pnl=excluded.realized_pnl,
+            updated_at=CURRENT_TIMESTAMP
+        ''', (user_id, symbol, new_qty, new_avg, old_realized))
+    
+    conn.commit()
+
+
+# Add new sell transaction and save updated symbol values to the postitions
+async def apply_sell(
+    user_id: int, symbol: str, qty: float, price: float, fee_usd: float = 0.0
+    ):
+    # Convert symbol name
+    symbol = symbol.upper().strip()
+    if qty <= 0 or price <= 0:
+        raise ValueError('qty and price must be > 0')
+    
+    # Get position data
+    pos = await get_position(user_id, symbol)
+    if post is None:
+        raise ValueError('no position')
+    
