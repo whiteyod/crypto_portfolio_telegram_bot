@@ -4,7 +4,6 @@ import pandas as pd
 
 from assets.db import c, conn, get_position_all
 from keyboards import main_kb, back_df_kb, back_from_csv_kb
-from handlers.commands import get_ticker_price
 from services.container import get_quotes
 
 import os

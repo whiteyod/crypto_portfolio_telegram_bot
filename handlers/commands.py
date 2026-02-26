@@ -31,20 +31,6 @@ session = Session()
 session.headers.update(headers)
 
 
-# Get current market price
-def get_ticker_price(ticker: str):
-    ''' Get current market price for pair from CMC'''
-    try:
-        # Send request to API
-        url = f'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={ticker.upper()}'
-        response = session.get(url, params=parameters)
-        data = json.loads(response.text)
-        result = data['data'][ticker.upper()]['quote']['USD']['price']
-    except:
-        return '0564'
-    return result
-
-
 # Get ticker data
 async def get_ticker_data_from_cmc(ticker: str):
     ''' Returns ticker name, symbol name '''
@@ -59,6 +45,7 @@ async def get_ticker_data_from_cmc(ticker: str):
     except: 
         print('no data')
     return ticker_name, ticker_symbol
+
 
 # Start command handler
 @router.message(Command('start'))

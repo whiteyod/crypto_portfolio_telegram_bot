@@ -2,10 +2,9 @@ from aiogram import Router, F, types
 
 from assets.db import get_position_all
 from keyboards import back_kb
-from services.container import cmc, quotes_cache, get_quotes
+from services.container import get_quotes
 
 import sys
-sys.path.append('/home/whiteyod/projects/portfolio_bot/')
 
 
 router = Router()
@@ -81,7 +80,7 @@ async def starting(callback: types.CallbackQuery):
                 if total_current_value else 0.0
             # Create message for each symbol
             portfolio_info.append(
-                f'<b>{it["symbol"]} {it["qty"]} ({it["current_value"]:.2f}USD)</b>'
+                f'<b>{it["symbol"]} {it["qty"]:.3f} ({it["current_value"]:.2f}USD)</b>'
                 f'\nAvg cost: <b>{it["avg_cost"]:.9f}$</b>'
                 f'\nMarket: <b>{it["market_price"]:.9f}$</b>'
                 f'\nUnrealized P/L: {it["unrealized"]:+.2f}$'
@@ -100,7 +99,7 @@ async def starting(callback: types.CallbackQuery):
         portfolio_info.append(
             f'\n<b>Total value:</b> {total_current_value:.2f} USD'
             f'\n<b>Unrealized P/L:</b> {total_unrealized:+.2f} USD'
-            f'\n <b>Realized P/L:</b> {total_realized:+.2f}'
+            f'\n<b>Realized P/L:</b> {total_realized:+.2f}'
             f'\n<b>Total P/L:</b> {total_pnl:+.2f} USD ({total_pnl_pct:+.2f}%)'
         )
 

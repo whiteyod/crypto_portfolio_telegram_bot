@@ -7,7 +7,8 @@ import asyncio
 
 from assets.db import apply_buy
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
-from handlers.commands import get_ticker_price, get_ticker_data_from_cmc
+from handlers.commands import get_ticker_data_from_cmc
+from services.container import get_quotes
 
 import sys
 sys.path.append('/home/whiteyod/projects/portfolio_bot/')
@@ -44,20 +45,21 @@ async def get_pair_state(message: Message, state=FSMContext):
     # Update states data 
     await state.update_data(pair=message.text)
     data = await state.get_data()
-    pair = data['pair'].upper()
-    result = get_ticker_price(pair)
+    symbol = data['pair'].upper()
+    quotes = await get_quotes(symbol)
+    result = quotes.get(symbol)
 
     # Check pair name correctness
-    if result == '0564': # If no pairs with that name in CMC db ask to enter another name
+    if result is None: # If no pairs with that name in CMC db ask to enter another name
         await state.update_data(pair=message.text)
         await asyncio.sleep(1)
         await msg.edit_text(
-            f'No ticker with name <b>{pair}</b> in <b>CoinMarketCap DB</b> '
+            f'No ticker with name <b>{symbol}</b> in <b>CoinMarketCap DB</b> '
             f'\nPlease enter correct ticker name: ',
             reply_markup=cancel_kb()
             )
     else: # Else set states to get buying price
-        ticker_name, ticker_symbol = await get_ticker_data_from_cmc(pair)
+        ticker_name, ticker_symbol = await get_ticker_data_from_cmc(symbol)
         result = f'{result:f}'
         await state.set_state(SaveHandler.price_state)
         await msg.edit_text(
