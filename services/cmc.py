@@ -1,4 +1,3 @@
-import json
 from requests import Session
 from typing import Iterable
 from loguru import logger as log

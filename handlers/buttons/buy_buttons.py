@@ -46,8 +46,8 @@ async def get_pair_state(message: Message, state=FSMContext):
     await state.update_data(pair=message.text)
     data = await state.get_data()
     symbol = data['pair'].upper()
-    quotes = await get_quotes(symbol)
-    result = quotes.get(symbol)
+    quotes = await get_quotes([symbol])
+    result = quotes.get(symbol.upper())
 
     # Check pair name correctness
     if result is None: # If no pairs with that name in CMC db ask to enter another name
