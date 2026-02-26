@@ -1,4 +1,5 @@
 from math import e
+from multiprocessing import Value
 import sqlite3
 from loguru import logger as log
 
@@ -135,7 +136,8 @@ async def get_position(user_id: int, symbol: str):
         SELECT quantity, avg_cost, realized_pnl
         FROM positions
         WHERE user_id = ? AND symbol = ?
-        ''', (user_id, symbol.upper().strip()))
+        ''', (user_id, symbol.upper().strip())
+    )
     return c.fetchone()
 
 
@@ -166,7 +168,8 @@ async def apply_buy(
         '''
         INSERT INTO positions (user_id, symbol, side, quantity, price, fee_usd)
         VALUES (?, ?, 'BUY', ?, ?, ?)
-        ''', (user_id, symbol, qty, price, fee_usd))
+        ''', (user_id, symbol, qty, price, fee_usd)
+    )
     
     # Insert new position's data
     c.execute(
@@ -178,7 +181,8 @@ async def apply_buy(
             avg_cost=excluded.avg_cost,
             realized_pnl=excluded.realized_pnl,
             updated_at=CURRENT_TIMESTAMP
-        ''', (user_id, symbol, new_qty, new_avg, old_realized))
+        ''', (user_id, symbol, new_qty, new_avg, old_realized)
+    )
     
     conn.commit()
 
@@ -197,3 +201,35 @@ async def apply_sell(
     if post is None:
         raise ValueError('no position')
     
+    # If exists map data and calculate new position values
+    old_qty, avg_cost, realized = map(float, pos)
+    if qty > old_qty + 1e-12:
+        raise ValueError('not enough quantity')
+    
+    realized_delta = (qty * (price - avg_cost)) - fee_usd
+    new_realized = realized + realized_delta
+    new_qty = old_qty - qty
+    
+    # Add new transaction data
+    c.execute(
+        '''
+        INSERT INTO transactions (user_id, symbol, side, quantity, price, fee_usd)
+        VALUES (?, ?, 'SELL', ?, ?, ?)
+        ''', (user_id, symbol, qty, price, fee_usd)
+    )
+
+    # Close position if all qty has been selling and delete position
+    if new_qty <= 1e-12:
+        c.execute(
+            'DELETE FROM positions WHERE user_id = ? AND symbol = ?',
+            (user_id, symbol)
+        )
+    else: # Update remaining position
+        c.execute(
+            '''
+            UPDATE postions
+            SET quantity = ?, realized_pnl = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND symbol = ?
+            ''', (new_qty, new_realized, user_id, symbol)
+        )
+    conn.commit()
