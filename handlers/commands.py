@@ -6,9 +6,8 @@ from requests import Session
 import json
 import sys
 
-from assets.db import create_symbols_table, create_actions_table, \
-    create_positions_table, create_transactions_table, \
-        migrate_messafes_to_positions
+from assets.db import create_actions_table, \
+    create_positions_table, create_transactions_table
 from config_reader import config
 from keyboards import main_kb
 
@@ -66,10 +65,8 @@ async def get_ticker_data_from_cmc(ticker: str):
 async def cmd_start(message: Message):
     user_id = message.from_user.id
     await create_actions_table()
-    await create_symbols_table(user_id)
     await create_transactions_table()
     await create_positions_table()
-    await migrate_messafes_to_positions()
     await message.answer(
         f'<b>Bot is ready!</b>'
         f'\n<b>• Press "Show"</b> to view your current portfolio.'

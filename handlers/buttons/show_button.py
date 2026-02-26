@@ -1,31 +1,23 @@
 from aiogram import Router, F, types
 
-from assets.db import c
+from assets.db import get_position_all
 from keyboards import back_kb
-from services.container import cmc, quotes_cache
+from services.container import cmc, quotes_cache, get_quotes
 
 import sys
 sys.path.append('/home/whiteyod/projects/portfolio_bot/')
 
 
 router = Router()
-     
+
 
 # Show button handler 
 @router.callback_query(F.data == 'show_table')
 async def starting(callback: types.CallbackQuery):
     user_id = callback.from_user.id
-    c.execute(
-        '''
-        SELECT symbol, quantity, ang_cost, realized_pnl
-        FROM positions 
-        WHERE user_id = ?
-        ''',
-        (user_id,)
-    )
-    rows = c.fetchall()
+    rows = await get_position_all(user_id)
 
-    # 
+    # Init portfolio message header
     portfolio_info = [f'Current portfolio: \n']
 
 
@@ -39,17 +31,8 @@ async def starting(callback: types.CallbackQuery):
                 show_alert=True
             )
     else: 
-        # Cache sorted key for this set of symbols
-        cache_key = 'quotes:' + ','.join(sorted(symbols))
-
-        # Try cache first
-        quotes = quotes_cache.get(cache_key)
-
-        # If no catch -> fetch once from CMC and store in cache
-        if quotes is None:
-            quotes = cmc.get_quotes_usd(symbols)
-            quotes_cache.set(cache_key, quotes)
-
+        # Try get quotes
+        quotes = await get_quotes(symbols)
         # Totals for the whole portfolio
         items = []
         total_current_value = 0.0
@@ -76,7 +59,7 @@ async def starting(callback: types.CallbackQuery):
 
             # Update totals
             total_current_value += current_value
-            total_cost_value += buying_value
+            total_cost_value += cost_value
             total_realized +=realized_pnl
 
 

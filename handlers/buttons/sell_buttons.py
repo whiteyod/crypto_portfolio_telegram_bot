@@ -9,7 +9,6 @@ from decimal import Decimal
 import sys
 
 from handlers.commands import get_ticker_price
-from services.cmc.CmcClient import get_quotes_usd
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
 
 

@@ -5,7 +5,7 @@ from aiogram.filters.state import State, StatesGroup
 
 import asyncio
 
-from assets.db import create_symbols_table, apply_buy
+from assets.db import apply_buy
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
 from handlers.commands import get_ticker_price, get_ticker_data_from_cmc
 

@@ -2,9 +2,10 @@ from aiogram import Router, F, types
 from aiogram.types import FSInputFile
 import pandas as pd
 
-from assets.db import c, conn
+from assets.db import c, conn, get_position_all
 from keyboards import main_kb, back_df_kb, back_from_csv_kb
 from handlers.commands import get_ticker_price
+from services.container import get_quotes
 
 import os
 import sys
@@ -18,26 +19,19 @@ router = Router()
 @router.callback_query(F.data == 'data_frame')
 async def show_data_frame(callback: types.CallbackQuery):
     user_id = callback.from_user.id
-    c.execute('''
-              SELECT pair, price, token_amount
-              FROM messages
-              WHERE user_id = ?
-              ''',
-              (user_id,))
-    results = c.fetchall()
-    if results:
+    rows = await get_position_all(user_id)
+    if rows:
         # Create DF
-        df = pd.DataFrame(results, columns=['ticker', 'buy_price', 'token_amount'])
+        df = pd.DataFrame(rows, columns=['symbol', 'quantity', 'avg_cost', 'realized_pnl'])
         
-        # Collect market price for all tickers
-        market_price = []
-        for i in df['ticker']:
-            market_price.append(get_ticker_price(i))
-        print(market_price)
+        # Collect market price for all symbols
+        symbols = [s.upper() for s in df['symbol'].tolist()]
+        # Try to get values from the cache
+        quotes = await get_quotes(symbols)
         
         # Add new columns
-        df['last_market_price'] = market_price
-        df['usd_amount'] = df['token_amount'] * df['last_market_price']
+        df['last_market_price'] = df['symbol'].str.upper().map(lambda s: quotes.get(s))
+        df['usd_amount'] = df['quantity'] * df['last_market_price']
         
         # Convert e-notation to real numbers if so
         pd.set_option('display.float_format', '{:.8f}'.format)
@@ -51,32 +45,26 @@ async def show_data_frame(callback: types.CallbackQuery):
 @router.callback_query(F.data == 'send_csv')
 async def send_csv(callback: types.CallbackQuery): # Sending DF as CSV
     user_id = callback.from_user.id
-    c.execute('''
-              SELECT pair, price, token_amount
-              FROM messages
-              WHERE user_id = ?
-              ''',
-              (user_id,))
-    results = c.fetchall()
+    rows = await get_position_all(user_id)
 
-    if results:
+    if rows:
         # Create DF
-        df = pd.DataFrame(results, columns=['ticker', 'buy_price', 'token_amount'])
+        df = pd.DataFrame(rows, columns=['symbol', 'quantity', 'avg_cost', 'realized_pnl'])
         
-        # Collect narket price for all tickers
-        market_price = []
-        for i in df['ticker']:
-            market_price.append(get_ticker_price(i))
-        print(market_price)
+        # Collect market price for all symbols
+        symbols = [s.upper() for s in df['symbol'].tolist()]
+        # Try to get values from the cache
+        quotes = await get_quotes(symbols)
         
         # Add new columns
-        df['last_market_price'] = market_price
-        df['usd_amount'] = df['token_amount'] * df['last_market_price']
+        df['last_market_price'] = df['symbol'].str.upper().map(lambda s: quotes.get(s))
+        df['usd_amount'] = df['quantity'] * df['last_market_price']
         
         # Convert e-notation to real numbers if so
         pd.set_option('display.float_format', '{:.8f}'.format)
         
         # Create csv file
+        os.makedirs('csv', exist_ok=True)
         df.to_csv(f'csv/{user_id}.csv', float_format='%.8f')
         path = f'csv/{user_id}.csv'
     try:
@@ -130,7 +118,7 @@ async def from_csv_to_main(callback: types.CallbackQuery):
 async def deleting(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     c.execute('''
-              DELETE FROM messages WHERE user_id = ?
+              DELETE FROM positions WHERE user_id = ?
               ''',
               (user_id,))
     conn.commit()

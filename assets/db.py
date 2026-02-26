@@ -101,34 +101,6 @@ async def create_positions_table():
 # ------------------------- Helper Functions -------------------------
 
 
-# One-time function for DB migration
-async def migrate_messafes_to_positions():
-    # Ensure new tables exist
-    await create_positions_table()
-    await create_transactions_table()
-
-    # Read existing positions from old table
-    c.execute('SELECT user_id, pair, price, token_amount FROM messages')
-    rows = c.fetchall()
-
-    for user_id, pair, avg_cost, qty in rows:
-        symbol = (pair or '').upper().strip()
-        if not symbol or qty is None or avg_cost is None:
-            continue
-        
-        # Insert/replcae position
-        c.execute(
-            '''
-            INSERT INTO positions (user_id, symbol, quantity, avg_cost, realized_pnl)
-            VALUES (?, ?, ?, ?, 0)
-            ON CONFLICT (user_id, symbol) DO UPDATE SET
-                quantity=excluded.quantity,
-                avg_cost=excluded.avg_cost,
-                updated_at=CURRENT_TIMESTAMP
-            ''', (user_id, symbol, float(qty), float(avg_cost))
-        )
-
-
 # Get one position from the DB
 async def get_position(user_id: int, symbol: str):
     c.execute(
@@ -138,7 +110,21 @@ async def get_position(user_id: int, symbol: str):
         WHERE user_id = ? AND symbol = ?
         ''', (user_id, symbol.upper().strip())
     )
+
     return c.fetchone()
+
+
+# Get all the positions from the DB
+async def get_position_all(user_id: int):
+    c.execute(
+        '''
+        SELECT symbol, quantity, avg_cost, realized_pnl
+        FROM positions
+        WHERE user_id = ?
+        ''', (user_id,)
+    )
+
+    return c.fetchall()
 
 
 # Add new buy transaction and save symbol values to the positions
@@ -166,7 +152,7 @@ async def apply_buy(
     # Insert new transaction data
     c.execute(
         '''
-        INSERT INTO positions (user_id, symbol, side, quantity, price, fee_usd)
+        INSERT INTO transactions (user_id, symbol, side, quantity, price, fee_usd)
         VALUES (?, ?, 'BUY', ?, ?, ?)
         ''', (user_id, symbol, qty, price, fee_usd)
     )
@@ -198,7 +184,7 @@ async def apply_sell(
     
     # Get position data
     pos = await get_position(user_id, symbol)
-    if post is None:
+    if pos is None:
         raise ValueError('no position')
     
     # If exists map data and calculate new position values
@@ -227,7 +213,7 @@ async def apply_sell(
     else: # Update remaining position
         c.execute(
             '''
-            UPDATE postions
+            UPDATE positions
             SET quantity = ?, realized_pnl = ?, updated_at = CURRENT_TIMESTAMP
             WHERE user_id = ? AND symbol = ?
             ''', (new_qty, new_realized, user_id, symbol)

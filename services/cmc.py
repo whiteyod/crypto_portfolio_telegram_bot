@@ -44,7 +44,7 @@ class CmcClient:
             try:
                 out[s] = float(data[s]['quote']['USD']['price'])
             except Exception as e:
-                log.info(f'We have an error: {e} >>> Add proper logging here!!!!')
+                log.info(f'We have an error: {e}')
 
         return out
 
