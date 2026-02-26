@@ -232,4 +232,5 @@ async def apply_sell(
             WHERE user_id = ? AND symbol = ?
             ''', (new_qty, new_realized, user_id, symbol)
         )
+        
     conn.commit()

@@ -18,18 +18,20 @@ async def starting(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     c.execute(
         '''
-        SELECT pair FROM messages WHERE user_id = ?
+        SELECT symbol, quantity, ang_cost, realized_pnl
+        FROM positions 
+        WHERE user_id = ?
         ''',
         (user_id,)
     )
-    pair = c.fetchall()
+    rows = c.fetchall()
 
     # 
     portfolio_info = [f'Current portfolio: \n']
 
 
     # Normalize symbols from DB rows
-    symbols = [''.join(x).upper() for x in pair]
+    symbols = [''.join(x).upper() for x in rows]
 
     # Send alert if user has no pairs data saved
     if not symbols:

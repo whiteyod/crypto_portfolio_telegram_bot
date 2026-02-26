@@ -5,7 +5,7 @@ from aiogram.filters.state import State, StatesGroup
 
 import asyncio
 
-from assets.db import c, get_ticker_data, conn, create_symbols_table
+from assets.db import create_symbols_table, apply_buy
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
 from handlers.commands import get_ticker_price, get_ticker_data_from_cmc
 
@@ -28,9 +28,6 @@ class SaveHandler(StatesGroup):
 async def saving(callback: types.CallbackQuery, state:FSMContext):
     # Clear state before start another
     await state.clear()
-    user_id = callback.message.from_user.id
-    # Create table if not exists
-    await create_symbols_table(user_id)
     # Set states to wait for user respond
     await state.set_state(SaveHandler.pair_state)
     await callback.message.answer(
@@ -92,7 +89,7 @@ async def get_amount_state(message: Message, state=FSMContext):
 
     # Get data from user through FSM and CMC API
     data = await state.get_data()
-    pair = data['pair'].upper()
+    symbol = data['pair'].upper()
     price = float(data['price'])
     try:
         amount_usd = float(data['amount'])
@@ -101,51 +98,12 @@ async def get_amount_state(message: Message, state=FSMContext):
             'Please send the number without any characters',
             reply_markup=cancel_kb()
             )
-    token_amount = amount_usd / price
-
-    # Cheking if row already exists
-    c.execute(
-        '''
-        SELECT count(*) FROM messages
-        WHERE pair = ? AND user_id = ?
-        ''',
-        (pair, user_id)
+    qty = amount_usd / price
+    await apply_buy(
+        user_id=user_id, symbol=symbol, qty=qty, price=price
         )
-    result = c.fetchone()
-
-    # Saving if there is no data before
-    if result[0] == 0:
-        c.execute(
-            '''
-            INSERT INTO messages (user_id, pair, price, token_amount)
-            VALUES (?, ?, ?, ?)
-            ''',
-            (user_id, pair, price, token_amount)
-        )  
-        conn.commit()
-        # Clear state and inform user about saving
-        await state.clear()
-        await message.answer(
-            f'Saved <b>{pair}</b>',
-            reply_markup=saving_kb())
-    else: # Changing values if there are data
-        # Calculating mean price and amount adjusting
-        previous_price, token_amount = await get_ticker_data(pair, user_id)
-        total_quantity = token_amount + (amount_usd / price)
-        total_amount_usd = (token_amount * previous_price) + amount_usd
-        mean_price = total_amount_usd / total_quantity
-        new_token_amount = total_amount_usd / mean_price
-
-        # Updating data in the db
-        c.execute(
-            '''
-            UPDATE messages SET price = ?, token_amount = ?
-            WHERE pair = ? AND user_id = ?
-            ''',
-            (mean_price, new_token_amount, pair, user_id)
-        )
-        conn.commit()
-        await state.clear()
-        await message.answer(
-            'Portfolio has been updated',
-            reply_markup=saving_kb())
+    
+    await state.clear()
+    await message.answer(
+        'Portfolio has been updated',
+        reply_markup=saving_kb())
