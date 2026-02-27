@@ -127,6 +127,19 @@ async def get_position_all(user_id: int):
     return c.fetchall()
 
 
+# Delete all the tables for user
+async def drop_all_tables(user_id: int):
+    c.execute('''
+              DELETE FROM positions WHERE user_id = ?
+              ''',
+              (user_id,))
+    c.execute('''
+              DELETE FROM transactions WHERE user_id = ?
+              ''',
+              (user_id,))
+    conn.commit()
+
+
 # Add new buy transaction and save symbol values to the positions
 async def apply_buy(
     user_id: int, symbol: str, qty: float, price: float, fee_usd: float = 0.0

@@ -1,56 +1,18 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from requests import Session
-
-import json
-import sys
 
 from assets.db import create_actions_table, \
     create_positions_table, create_transactions_table
-from config_reader import config
 from keyboards import main_kb
-
-sys.path.append('/home/whiteyod/projects/portfolio_bot/')
 
 
 router = Router()
 
 
-# Set up API key
-headers = {
-    'Accepts': 'application/json',
-    'X-CMC_PRO_API_KEY': config.api_key.get_secret_value(),
-}
-
-parameters = {
-  'convert':'USD'
-}
-
-session = Session()
-session.headers.update(headers)
-
-
-# Get ticker data
-async def get_ticker_data_from_cmc(ticker: str):
-    ''' Returns ticker name, symbol name '''
-    
-    try:
-        # Send request
-        url = f'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={ticker.upper()}'
-        response = session.get(url, params=parameters)
-        data = json.loads(response.text)
-        ticker_name = data['data'][ticker.upper()]['name']
-        ticker_symbol = data['data'][ticker.upper()]['symbol']
-    except: 
-        print('no data')
-    return ticker_name, ticker_symbol
-
-
 # Start command handler
 @router.message(Command('start'))
 async def cmd_start(message: Message):
-    user_id = message.from_user.id
     await create_actions_table()
     await create_transactions_table()
     await create_positions_table()

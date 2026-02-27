@@ -7,7 +7,6 @@ import asyncio
 
 from assets.db import apply_buy
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
-from handlers.commands import get_ticker_data_from_cmc
 from services.container import get_quotes, cmc
 
 import sys

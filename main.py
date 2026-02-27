@@ -7,8 +7,9 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage 
 
 from config_reader import config
-from handlers import commands, tests
-from handlers.buttons import another_buttons, buy_buttons, sell_buttons, show_button
+from handlers import commands
+from handlers.buttons import another_buttons, buy_buttons, \
+    sell_buttons, show_button
 
 
 
@@ -29,7 +30,6 @@ async def main():
         commands.router,
         another_buttons.router,
         sell_buttons.router,
-        tests.router,
         buy_buttons.router,
         show_button.router
     )

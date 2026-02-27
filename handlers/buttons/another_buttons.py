@@ -2,7 +2,7 @@ from aiogram import Router, F, types
 from aiogram.types import FSInputFile
 import pandas as pd
 
-from assets.db import c, conn, get_position_all
+from assets.db import get_position_all, drop_all_tables
 from keyboards import main_kb, back_df_kb, back_from_csv_kb
 from services.container import get_quotes
 
@@ -116,11 +116,7 @@ async def from_csv_to_main(callback: types.CallbackQuery):
 @router.callback_query(F.data == 'delete_table')
 async def deleting(callback: types.CallbackQuery):
     user_id = callback.from_user.id
-    c.execute('''
-              DELETE FROM positions WHERE user_id = ?
-              ''',
-              (user_id,))
-    conn.commit()
+    await drop_all_tables(user_id)
     await callback.answer(
         text='Portfolio was cleared!',
         show_alert=True

@@ -1,4 +1,3 @@
-from email.errors import NoBoundaryInMultipartDefect
 from requests import Session
 from typing import Collection, Iterable, Optional
 from loguru import logger as log
@@ -144,6 +143,8 @@ class CmcClient:
                 row['name'] = q.get('name')
             if 'symbol' in wanted:
                 row['symbol'] = q.get('symbol')
+            if 'circulating_supply' in wanted:
+                row['circulating_supply'] = q.get('circulating_supply')
 
             quote = (q.get('quote') or {}).get(convert) or {}
 
@@ -153,9 +154,7 @@ class CmcClient:
                 row['change_24h'] = quote.get('percent_change_24h')
             if 'volume_24h' in wanted:
                 row['volume_24h'] = quote.get('volume_24h')
-            if 'circullating_supply' in wanted:
-                row['circullating_supply'] = quote.get('circullating_supply')
-            if 'decription' in wanted:
+            if 'description' in wanted:
                 meta = info_data.get(sym) or {}
                 row['description'] = meta.get('description')
             
