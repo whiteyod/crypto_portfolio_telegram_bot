@@ -31,7 +31,7 @@ async def saving(callback: types.CallbackQuery, state:FSMContext):
     # Set states to wait for user respond
     await state.set_state(SaveHandler.pair_state)
     await callback.message.answer(
-        'Enter ticker name, use lowercase letters (example: btc, xrp, matic):',
+        'Enter symbol name (example: btc, xrp, skr):',
         reply_markup=cancel_kb()
         )
 

@@ -1,3 +1,4 @@
+from gc import callbacks
 from aiogram import Router, F, types
 from aiogram.types import FSInputFile
 import pandas as pd
@@ -79,22 +80,29 @@ async def send_csv(callback: types.CallbackQuery): # Sending DF as CSV
 
 
 # Back to main button handler
-@router.callback_query(F.data == 'main')
+@router.callback_query(F.data.in_(['main', 'main_csv']))
 async def menu(callback: types.CallbackQuery):
-    await callback.message.edit_text(WELCOME_TEXT, reply_markup=main_kb())
-    await callback.answer()
+    if callback.data == 'main':
+        await callback.message.edit_text(WELCOME_TEXT, reply_markup=main_kb())
+        await callback.answer()
+    else:
+        await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
+ 
+    
+# Return to main from csv creating
+# @router.callback_query(F.data == 'main_csv')
+# async def from_csv_to_main(callback: types.CallbackQuery):
+#     if callback.data == 'main_csv':
+#         print('main_csv')
+#     else:
+#         print('kek')
+#     await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
 
 
 # Cancel and delete message button handler
 @router.callback_query(F.data == 'cancel')
 async def cancel(callback: types.CallbackQuery):
     await callback.message.delete()
-    
-    
-# Return to main from csv creating
-@router.callback_query(F.data == 'main_csv')
-async def from_csv_to_main(callback: types.CallbackQuery):
-    await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
 
 
 # Drop button handler
