@@ -8,7 +8,7 @@ import asyncio
 from assets.db import apply_buy
 from keyboards import saving_kb, cancel_kb, cancel_kb_market
 from handlers.commands import get_ticker_data_from_cmc
-from services.container import get_quotes
+from services.container import get_quotes, cmc
 
 import sys
 sys.path.append('/home/whiteyod/projects/portfolio_bot/')
@@ -59,12 +59,15 @@ async def get_pair_state(message: Message, state=FSMContext):
             reply_markup=cancel_kb()
             )
     else: # Else set states to get buying price
-        ticker_name, ticker_symbol = await get_ticker_data_from_cmc(symbol)
+        asset_info = cmc.get_assets_info([symbol], fields={'name', 'symbol'})
+        coin_name = asset_info.get(symbol, {}).get('name')
+        coin_symbol = asset_info.get(symbol, {}).get('symbol')
+        print(asset_info, coin_name, coin_symbol)
         result = f'{result:f}'
         await state.set_state(SaveHandler.price_state)
         await msg.edit_text(
-            f'Ticker: <b>{ticker_name}</b>'
-            f'\nSymbol: <b>{ticker_symbol}</b>'
+            f'Coin: <b>{coin_name}</b>'
+            f'\nSymbol: <b>{coin_symbol}</b>'
             f'\nLast market price: <b>{result}$</b>'
             f'\nEnter buying price:',
             reply_markup=cancel_kb_market()
