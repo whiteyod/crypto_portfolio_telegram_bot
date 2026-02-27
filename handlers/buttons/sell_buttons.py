@@ -8,10 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import sys
 
 from services.container import get_quotes
-from keyboards import saving_kb, cancel_kb, cancel_kb_market
-
-
-sys.path.append('/home/whiteyod/projects/inputToDFbot/')
+from keyboards import saving_kb, cancel_kb
 
 
 router = Router()

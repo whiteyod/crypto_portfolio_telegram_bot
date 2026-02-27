@@ -3,12 +3,11 @@ from aiogram.types import FSInputFile
 import pandas as pd
 
 from assets.db import get_position_all, drop_all_tables
+from assets.texts import WELCOME_TEXT
 from keyboards import main_kb, back_df_kb, back_from_csv_kb
 from services.container import get_quotes
 
 import os
-import sys
-sys.path.append('/home/whiteyod/projects/portfolio_bot/')
 
 
 router = Router()
@@ -82,14 +81,7 @@ async def send_csv(callback: types.CallbackQuery): # Sending DF as CSV
 # Back to main button handler
 @router.callback_query(F.data == 'main')
 async def menu(callback: types.CallbackQuery):
-    await callback.message.edit_text(
-        f'<b>Bot is ready!</b>'
-        f'\n<b>• Press "Show"</b> to view your current portfolio.'
-        f'\n<b>• Press "Buy"</b> to add new assets to your portfolio.'
-        f'\n<b>• Press "Sell"</b> to sell assets from portfolio.'
-        f'\n<b>• Press "Drop"</b> to clear the entire portfolio.',
-        reply_markup=main_kb()
-        )
+    await callback.message.edit_text(WELCOME_TEXT, reply_markup=main_kb())
     await callback.answer()
 
 
@@ -102,14 +94,7 @@ async def cancel(callback: types.CallbackQuery):
 # Return to main from csv creating
 @router.callback_query(F.data == 'main_csv')
 async def from_csv_to_main(callback: types.CallbackQuery):
-    await callback.message.answer(
-        f'<b>Bot is ready!</b>'
-        f'\n<b>• Press "Show"</b> to view your current portfolio.'
-        f'\n<b>• Press "Buy"</b> to add new assets to your portfolio.'
-        f'\n<b>• Press "Sell"</b> to sell assets from portfolio.'
-        f'\n<b>• Press "Drop"</b> to clear the entire portfolio.',
-        reply_markup=main_kb()
-    )
+    await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
 
 
 # Drop button handler
