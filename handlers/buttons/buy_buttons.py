@@ -80,7 +80,8 @@ async def get_pair_state(message: Message, state=FSMContext):
 @router.callback_query(F.data.startswith('buy_mode:'))
 async def buy_mode_selected(callback: types.CallbackQuery, state: FSMContext):
     # Get buying mode state(by token/by USD)
-    mode = callback.data.split(':', 1)[1]
+    mode = callback.data.split(':', 2)[1]
+    print(mode)
     await state.update_data(buy_mode=mode)
     # Set state to catch buying price
     await state.set_state(SaveHandler.price_state)
@@ -96,7 +97,7 @@ async def get_price_state(message: Message, state=FSMContext):
     # Get mode state data 
     data = await state.get_data()
     symbol = data['pair'].upper()
-    mode = data['buy_mode']
+    mode = data.get('buy_mode')
     # Update price state and wait for respond
     await state.update_data(price=message.text)
     await state.set_state(SaveHandler.amount_state)
