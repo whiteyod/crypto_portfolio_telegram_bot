@@ -18,9 +18,10 @@ router = Router()
 
 # Create class of states
 class SaveHandler(StatesGroup):
+    amount_state = State()
+    mode_state = State()
     pair_state = State()
     price_state = State()
-    amount_state = State()
 
 
 # Save button handler
@@ -31,7 +32,7 @@ async def saving(callback: types.CallbackQuery, state:FSMContext):
     # Set states to wait for user respond
     await state.set_state(SaveHandler.pair_state)
     await callback.message.answer(
-        'Enter symbol name (example: btc, xrp, skr):',
+        'Enter token symbol (example: BTC, Xrp, skr):',
         reply_markup=cancel_kb()
         )
 

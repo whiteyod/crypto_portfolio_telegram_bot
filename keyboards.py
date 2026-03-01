@@ -44,10 +44,6 @@ def back_kb():
             callback_data='sell'
         ),
         types.InlineKeyboardButton(
-            text='Show DF',
-            callback_data='data_frame'
-        ),
-        types.InlineKeyboardButton(
             text='Send CSV',
             callback_data='send_csv'
         )
@@ -147,6 +143,7 @@ def main_menu_kb():
     )
     return kb.as_markup()
 
+
 # Cancel and return to main
 def cancel_kb_market():
     kb = InlineKeyboardBuilder()
@@ -156,4 +153,57 @@ def cancel_kb_market():
             callback_data='main'
         )
     )
+    return kb.as_markup()
+
+
+# Select Sell mode by token/by USD
+def sell_input_mode_kb(symbol: str):
+    symbol = symbol.upper().strip()
+
+    kb = InlineKeyboardBuilder()
+    kb.add(
+        types.InlineKeyboardButton(
+            text='Sell in USD',
+            callback_data=f'sell_mode:usd:{symbol}',
+        ),
+        types.InlineKeyboardButton(
+            text=f'Sell in {symbol}',
+            callback_data=f'sell_mode:qty:{symbol}'
+        )
+    )
+    kb.add(types.InlineKeyboardButton(text='Cancel', callback_data='cancel'))
+    kb.adjust(2, 1)
+    return kb.as_markup()
+
+
+# Select buy mode by token/by USD
+def buy_input_mode_kb(symbol: str):
+    symbol = symbol.upper().strip()
+
+    kb = InlineKeyboardBuilder()
+    kb.add(
+        types.InlineKeyboardButton(
+            text='Buy in USD',
+            callback_data=f'buy_mode:usd:{symbol}'
+        ),
+        types.InlineKeyboardButton(
+            text=f'Buy in {symbol}',
+            callback_data=f'buy_mode:qty:{symbol}'
+        )
+    )
+    kb.add(types.InlineKeyboardButton(text='Cancel', callback_data='cancel'))
+    kb.adjust(2, 1)
+    return kb.as_markup()
+
+
+# Select symbol to sell
+def sell_symbol_kb(symbols: list[str]):
+    kb = InlineKeyboardBuilder()
+    for s in symbols:
+        s = s.upper().strip()
+        kb.add(
+            types.InlineKeyboardButton(text=s, callback_data=f'sell_sym:{s}')
+        )
+    kb.add(types.InlineKeyboardButton(text='Cancel', callback_data='cancel'))
+    kb.adjust(2)
     return kb.as_markup()

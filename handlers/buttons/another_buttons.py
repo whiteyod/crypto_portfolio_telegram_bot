@@ -14,32 +14,6 @@ import os
 router = Router()
 
 
-# Show table as DF button handler
-@router.callback_query(F.data == 'data_frame')
-async def show_data_frame(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-    rows = await get_position_all(user_id)
-    if rows:
-        # Create DF
-        df = pd.DataFrame(rows, columns=['symbol', 'quantity', 'avg_cost', 'realized_pnl'])
-        
-        # Collect market price for all symbols
-        symbols = [s.upper() for s in df['symbol'].tolist()]
-        # Try to get values from the cache
-        quotes = await get_quotes(symbols)
-        
-        # Add new columns
-        df['last_market_price'] = df['symbol'].str.upper().map(lambda s: quotes.get(s))
-        df['usd_amount'] = df['quantity'] * df['last_market_price']
-        
-        # Convert e-notation to real numbers if so
-        pd.set_option('display.float_format', '{:.8f}'.format)
-        await callback.message.edit_text(
-            f'{df}',
-            reply_markup=back_df_kb()
-        )
-
-
 # Sending data as CVS file
 @router.callback_query(F.data == 'send_csv')
 async def send_csv(callback: types.CallbackQuery): # Sending DF as CSV
@@ -87,16 +61,6 @@ async def menu(callback: types.CallbackQuery):
         await callback.answer()
     else:
         await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
- 
-    
-# Return to main from csv creating
-# @router.callback_query(F.data == 'main_csv')
-# async def from_csv_to_main(callback: types.CallbackQuery):
-#     if callback.data == 'main_csv':
-#         print('main_csv')
-#     else:
-#         print('kek')
-#     await callback.message.answer(WELCOME_TEXT, reply_markup=main_kb())
 
 
 # Cancel and delete message button handler
