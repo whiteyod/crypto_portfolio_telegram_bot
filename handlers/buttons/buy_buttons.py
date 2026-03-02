@@ -81,7 +81,6 @@ async def get_pair_state(message: Message, state=FSMContext):
 async def buy_mode_selected(callback: types.CallbackQuery, state: FSMContext):
     # Get buying mode state(by token/by USD)
     mode = callback.data.split(':', 2)[1]
-    print(mode)
     await state.update_data(buy_mode=mode)
     # Set state to catch buying price
     await state.set_state(SaveHandler.price_state)

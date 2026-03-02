@@ -1,4 +1,3 @@
-from math import e
 from multiprocessing import Value
 import sqlite3
 from loguru import logger as log
@@ -99,6 +98,20 @@ async def create_positions_table():
 
 
 # ------------------------- Helper Functions -------------------------
+
+
+# Get all symbols from positions
+async def get_symbol_all(user_id: str):
+    c.execute(
+        '''
+        SELECT symbol
+        FROM positions
+        WHERE user_id = ?
+        ORDER BY symbol
+        ''', (user_id,)
+    )
+
+    return c.fetchall()
 
 
 # Get one position from the DB
